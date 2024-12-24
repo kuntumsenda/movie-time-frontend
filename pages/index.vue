@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { useApi } from "@/composables/useApi";
-import { filterListByIds } from "@/composables/filter";
+import { refactorListMovieWithGenre } from "@/composables/filter";
 import { API_DISCOVER, API_TRENDING } from "@/utils/api";
-import type { ModelMovie } from "@/models/movie";
+import type { ModelMovie } from "~/models/movies";
 import { useGeneralStore } from "@/stores/general";
 
 const { fetchData } = useApi();
@@ -14,16 +14,6 @@ const sortDesc = ref(true as boolean);
 const listBanner = ref([] as ModelMovie[]);
 const listDiscvoverMovie = ref([] as ModelMovie[]);
 
-function refactorWithGenres(listMovie: ModelMovie[]) {
-  if (listMovie.length && generalStore.getMovieGenres.length) {
-    return listMovie.map((x) => ({
-      ...x,
-      genres: filterListByIds(x.genre_ids, generalStore.getMovieGenres),
-    }));
-  }
-  return listMovie;
-}
-
 async function getListMovie() {
   const data = await fetchData(API_DISCOVER.movie, {
     include_adult: false,
@@ -32,31 +22,40 @@ async function getListMovie() {
     page: page.value,
     sort_by: sortDesc.value ? `${sortBy}.desc` : `${sortBy}.asc`,
   });
-  const newList = refactorWithGenres(data.results);
+  const newList = refactorListMovieWithGenre(
+    data.results,
+    generalStore.getMovieGenres
+  );
   listDiscvoverMovie.value = [...newList];
+  getListBanner();
 }
 
 async function getListBanner() {
   const data = await fetchData(API_TRENDING.all, {
     language: "en-US",
   });
-  const newList = refactorWithGenres(data.results.slice(0, 5));
+  const newList = refactorListMovieWithGenre(
+    data.results.slice(0, 5),
+    generalStore.getMovieGenres
+  );
   listBanner.value = [...newList];
 }
 
 onMounted(() => {
   getListMovie();
-  getListBanner();
 });
 
 watch(sortDesc, () => {
   getListMovie();
 });
 
-watch(generalStore.getMovieGenres, () => {
-  const newListBanner = refactorWithGenres(listBanner.value);
+watch(generalStore.getMovieGenres, (val) => {
+  const newListBanner = refactorListMovieWithGenre(listBanner.value, val);
   listBanner.value = [...newListBanner];
-  const newListDiscover = refactorMovieList(listDiscvoverMovie.value);
+  const newListDiscover = refactorListMovieWithGenre(
+    listDiscvoverMovie.value,
+    val
+  );
   listDiscvoverMovie.value = [...newListDiscover];
 });
 </script>
@@ -100,6 +99,7 @@ watch(generalStore.getMovieGenres, () => {
           <MCardMovie
             v-for="item in listDiscvoverMovie"
             :key="item.id"
+            :id="item.id"
             :posterPath="item.poster_path"
             :releaseDate="item.release_date"
             :rate="item.vote_average"

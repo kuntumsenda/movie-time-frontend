@@ -9,6 +9,7 @@ export const API_DISCOVER = {
 export const API_MOVIE_LIST = {
   nowPlaying: "movie/now_playing" as string,
   popular: "movie/popular" as string,
+  topRated: "movie/top_rated" as string,
 };
 
 export const API_TRENDING = {
@@ -16,5 +17,5 @@ export const API_TRENDING = {
 };
 
 export const API_MOVIES = {
-  list: "movie/movie_id/lists" as string,
+  detail: "movie/" as string,
 };

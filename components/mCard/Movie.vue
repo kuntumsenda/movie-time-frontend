@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import { defineProps } from "vue";
 import { number1Comma, onlyYear, genreDisplay } from "@/composables/format";
+import type { ModelGenre } from "~/models/general";
 
 const props = defineProps({
+  id: Number,
   posterPath: String,
   title: String,
   releaseDate: String,
@@ -10,16 +12,10 @@ const props = defineProps({
   genres: { type: Array, default: [] },
 });
 
-const yearRelease = computed(() => {
-  if (props.releaseDate) {
-    const split = props.releaseDate.split("-");
-    return split[0];
-  }
-  return "";
-});
+const router = useRouter();
 
 const rateDisplay = computed(() => {
-  return number1Comma(props.rate);
+  return number1Comma(props.rate ?? 0);
 });
 </script>
 <template>
@@ -33,9 +29,15 @@ const rateDisplay = computed(() => {
         class="w-full h-full absolute top-0 left-0 p-3 flex items-center justify-center text-center info-hover"
       >
         <div>
-          <MRating :rate="rateDisplay" class="justify-center" />
-          <span class="block my-6">{{ genreDisplay(genres) }}</span>
-          <MButton label="View" class="mx-auto" />
+          <MRating :rate="rate ?? 0" class="justify-center" />
+          <span class="block my-6">{{
+            genreDisplay(genres as ModelGenre[], false)
+          }}</span>
+          <MButton
+            label="View"
+            class="mx-auto"
+            @click="router.push(`/detail/${id}`)"
+          />
         </div>
       </div>
       <img
@@ -48,12 +50,14 @@ const rateDisplay = computed(() => {
     <p class="block font-semibold mb-1 truncate" style="line-height: 1.22">
       {{ title }}
     </p>
-    <small class="text-gray-light text-sm">{{ onlyYear(releaseDate) }}</small>
+    <small class="text-gray-light text-sm">{{
+      onlyYear(releaseDate ?? "")
+    }}</small>
   </div>
 </template>
 <style lang="css" module="classes">
 .cardMovie {
-  min-width: 220px;
+  max-width: 220px;
   position: relative;
   cursor: pointer;
 }
@@ -63,7 +67,7 @@ const rateDisplay = computed(() => {
   position: relative;
 }
 .imgMovie {
-  object-fit: contain;
+  object-fit: cover;
   width: 100%;
   height: 330px;
 }

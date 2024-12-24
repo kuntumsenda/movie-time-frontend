@@ -1,141 +1,177 @@
 <script lang="ts" setup>
 import { useApi } from "@/composables/useApi";
-import { filterListByIds } from "@/composables/filter";
-import { API_DISCOVER } from "@/utils/api";
-import type { ModelMovie } from "@/models/movie";
-import type { ModelGenre } from "@/models/general";
+import { refactorListMovieWithGenre } from "@/composables/filter";
+import { API_MOVIE_LIST, API_MOVIES } from "@/utils/api";
+import type { ModelMovie } from "~/models/movies";
 import { useGeneralStore } from "@/stores/general";
+import { USDollar, genreDisplay, onlyYear } from "#build/imports";
+import type { ModelReview } from "~/models/review";
 
-definePageMeta({
-  validate: async (route) => {
-    const valid = ["movie", "tv"];
-    return valid.includes(route.params.nav);
-  },
-});
 const route = useRoute();
 const { fetchData } = useApi();
 const generalStore = useGeneralStore();
+const listRecommendation = ref([] as ModelMovie[]);
+const detail = ref({} as ModelMovie);
+const listReview = ref([] as ModelReview[]);
+const reviewPage = ref(1 as number);
+const reviewTotalPage = ref(1 as number);
 
-const pageInfo = [
-  {
-    key: "movie",
-    title: "Movies",
-  },
-  {
-    key: "tv",
-    title: "TV Shows",
-  },
-] as { key: string; title: string }[];
-
-const pageTitle = computed(() => {
-  return pageInfo.find((x) => x.key === route.params.nav).title;
-});
-
-const totalPage = ref(1 as number);
-const page = ref(1 as number);
-const sortBy = "popularity" as string;
-const sortDesc = ref(true as boolean);
-const listMovies = ref([] as ModelMovie[]);
-const genreList = ref([] as ModelGenre);
-
-function refactorWithGenres(list: ModelMovie[]) {
-  if (list.length && generalStore.getMovieGenres.length) {
-    return list.map((x) => ({
-      ...x,
-      genres: filterListByIds(x.genre_ids, generalStore.getMovieGenres),
-    }));
-  }
-  return list;
+async function getMovieDetail() {
+  const data = await fetchData(`${API_MOVIES.detail}${route.params.id}`, {
+    language: "en-US",
+  });
+  detail.value = data;
 }
 
-async function getListMovie() {
-  const data = await fetchData(API_DISCOVER.movie, {
-    include_adult: false,
-    include_video: false,
+async function getMovieReview() {
+  const data = await fetchData(
+    `${API_MOVIES.detail}${route.params.id}/reviews`,
+    {
+      language: "en-US",
+    }
+  );
+  listReview.value =
+    data.results?.length > 2 ? data.results.slice(0, 2) : data.results;
+  reviewTotalPage.value = data.totalPages;
+}
+
+async function getListRecommend() {
+  const data = await fetchData(API_MOVIE_LIST.topRated, {
     language: "en-US",
-    page: page.value,
-    sort_by: sortDesc.value ? `${sortBy}.desc` : `${sortBy}.asc`,
+    page: 1,
   });
-  totalPage.value = data.total_pages;
-  const newList = refactorWithGenres(data.results);
-  if (page.value === 1) listMovies.value = [...newList];
-  else listMovies.value = [...listMovies.value, ...newList];
+  const newList = refactorListMovieWithGenre(
+    data.results.slice(0, 5),
+    generalStore.getMovieGenres
+  );
+  listRecommendation.value = [...newList];
 }
 
 const title = onMounted(() => {
-  getListMovie();
-  if (route.params.nav === "movie") {
-    genreList.value = generalStore.getMovieGenres.map((x) => ({
-      ...x,
-      selected: false,
-    }));
-  }
+  getMovieDetail();
+  getMovieReview();
+  getListRecommend();
 });
 
-watch(sortDesc, () => {
-  getListMovie();
+watch(generalStore.getMovieGenres, (val) => {
+  const newList = refactorListMovieWithGenre(listRecommendation.value, val);
+  listRecommendation.value = [...newList];
 });
-
-watch(generalStore.getMovieGenres, () => {
-  if (page > 1) return false;
-  const newListDiscover = refactorMovieList(listMovies.value);
-  listMovies.value = [...newListDiscover];
-});
-
-async function loadMoreHandle() {
-  if (page.value + 1 >= totalPage.value) return false;
-  await page.value++;
-  getListMovie();
-}
 </script>
 <template>
-  <div style="position: relative">
-    <section :class="classes.sectionMovieList">
-      <div class="container" :class="classes.containerMovieList">
-        <div class="mb-11 flex items-end gap-4 justify-between">
-          <MTitle :text="pageTitle" />
+  <div class="relative" :class="classes.pageDetail">
+    <div class="relative">
+      <img
+        :src="`https://image.tmdb.org/t/p/w3840_and_h1200_face${detail.backdrop_path}`"
+        :alt="detail.backdrop_path"
+        class="w-full h-full absolute object-cover"
+        style="z-index: -1"
+      />
+      <section :class="classes.sectionOverview" class="relative">
+        <div class="container absolute" :class="classes.containerPoster">
+          <MPhotoPoster elevation :path="detail.poster_path" />
         </div>
-        <div class="flex gap-7">
-          <div :class="classes.sortCard" class="h-fit">
-            <div class="font-semibold px-4 py-5">Sort Result By</div>
-            <div class="px-4 py-5">
-              <MInput placeholder="Popularity" />
-            </div>
-            <div class="font-semibold px-4 py-5">Genres</div>
-            <div class="px-4 py-5">
-              <span v-for="gen in genreList" :key="gen.id" class="block">{{
-                gen.name
-              }}</span>
-            </div>
+        <div class="container">
+          <div
+            class="font-medium px-8 pb-8 pt-4 text-white"
+            :class="classes.containerOverviewSpace"
+          >
+            <p style="font-size: 18px">
+              {{ onlyYear(detail.release_date ?? "") }}
+            </p>
+            <h2 class="text-3xl font-semibold">{{ detail.title }}</h2>
+            <p class="text-md">
+              {{ genreDisplay(detail.genres ?? [], false) }}
+            </p>
           </div>
-          <div :class="classes.movieWrap" class="w-full">
+        </div>
+        <div style="background: #00000080">
+          <div :class="classes.containerOverviewSpace">
             <div
-              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-5 gap-y-6"
+              class="container grid grid-cols-6 sm:grid-cols-12 lg:flex items-center py-5 gap-y-5"
             >
-              <MCardMovie
-                v-for="item in listMovies"
-                :key="item.id"
-                :posterPath="item.poster_path"
-                :releaseDate="item.release_date"
-                :rate="item.vote_average"
-                :title="item.title"
-                :genres="item.genres"
-              />
-            </div>
-            <div v-if="page + 1 < totalPage" :class="classes.btnLoad">
-              <MButton
-                label="Load More"
-                class="mx-auto"
-                @click="loadMoreHandle()"
-              />
+              <div
+                class="flex items-center gap-3 px-8 sm:col-span-12 col-span-6"
+              >
+                <div class="text-sm font-medium">
+                  <span class="text-white-500 block">USER SCORE</span>
+                  <div>{{ detail.vote_count }} Votes</div>
+                </div>
+                <MRating
+                  :rate="detail.vote_average"
+                  size="lg"
+                  class="font-semibold"
+                />
+              </div>
+              <div class="text-sm font-medium px-8 col-span-6">
+                <span class="text-white-500 block">STATUS</span>
+                <div>{{ detail.status }}</div>
+              </div>
+              <div class="text-sm font-medium px-8 col-span-6">
+                <span class="text-white-500 block">LANGUAGE</span>
+                <div>{{ detail.spoken_languages?.[0].english_name }}</div>
+              </div>
+              <div class="text-sm font-medium px-8 col-span-6">
+                <span class="text-white-500 block">BUDGET</span>
+                <div>
+                  {{ USDollar.format(detail.budget ?? 0) }}
+                </div>
+              </div>
+              <div class="text-sm font-medium px-8 col-span-6">
+                <span class="text-white-500 block">PRODUCTION</span>
+                <div>{{ detail.production_companies?.[0].name }}</div>
+              </div>
             </div>
           </div>
+        </div>
+        <div class="bg-white">
+          <div class="container">
+            <div class="px-8" :class="classes.containerOverviewSpace">
+              <div class="pb-11 pt-6 text-sm" style="max-width: 526px">
+                <h3 class="font-semibold mb-2 text-red">OVERVIEW</h3>
+                <p class="text-blackNormal leading-loose">
+                  {{ detail.overview }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <section class="bg-white" :class="classes.sectionReview">
+      <div class="container">
+        <h3 class="font-semibold text-sm mb-6 text-red">REVIEWS</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-9">
+          <MCardReview
+            v-for="(rev, index) in listReview"
+            :key="index"
+            :item="rev"
+          />
+        </div>
+      </div>
+    </section>
+    <section class="py-12">
+      <div class="container">
+        <h3 class="font-semibold text-sm mb-9">RECOMMENDATION MOVIES</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5">
+          <MCardMovie
+            v-for="item in listRecommendation"
+            :key="item.id"
+            :posterPath="item.poster_path"
+            :releaseDate="item.release_date"
+            :rate="item.vote_average"
+            :title="item.title"
+            :genres="item.genres"
+          />
         </div>
       </div>
     </section>
   </div>
 </template>
 <style lang="css" module="classes">
+.pageDetail {
+  margin-top: -66px;
+}
 .sectionMovieList {
   position: relative;
 }
@@ -163,5 +199,19 @@ async function loadMoreHandle() {
   background: linear-gradient(180deg, #0e1723 0%, rgba(30, 35, 42, 0) 100%);
   border-radius: 8px;
   width: 240px;
+}
+.sectionReview {
+  padding: 0 0 58px;
+}
+.sectionOverview {
+  padding-top: 223px;
+}
+.containerPoster {
+  top: 223px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.containerOverviewSpace {
+  margin-left: 220px;
 }
 </style>

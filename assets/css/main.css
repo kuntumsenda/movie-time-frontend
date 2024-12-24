@@ -43,6 +43,26 @@ button:focus {
   max-width: 1210px;
   width: 100%;
   margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+@media screen and (min-width: 600px) {
+  .container {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+@media screen and (min-width: 960px) {
+  .container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+@media screen and (min-width: 1210px) {
+  .container {
+    padding-left: 0;
+    padding-right: 0;
+  }
 }
 
 .text-ellipsis-2 {
@@ -55,6 +75,14 @@ button:focus {
 
 .text-ellipsis-5 {
   -webkit-line-clamp: 5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-ellipsis-7 {
+  -webkit-line-clamp: 7;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;

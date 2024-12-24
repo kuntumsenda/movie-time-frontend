@@ -1,52 +1,42 @@
 <script lang="ts" setup>
 import { useApi } from "@/composables/useApi";
-import { filterListByIds } from "@/composables/filter";
 import { API_DISCOVER } from "@/utils/api";
-import type { ModelMovie } from "@/models/movie";
-import type { ModelGenre } from "@/models/general";
+import { ref, computed, watch, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import { useGeneralStore } from "@/stores/general";
+import type { ModelMovie } from "~/models/movies";
+import type { ModelGenre } from "@/models/general";
+import { refactorListMovieWithGenre } from "#build/imports";
 
 definePageMeta({
   validate: async (route) => {
     const valid = ["movie", "tv"];
-    return valid.includes(route.params.nav);
+    const nav = Array.isArray(route.params.nav)
+      ? route.params.nav[0]
+      : route.params.nav;
+    return valid.includes(nav);
   },
 });
+
 const route = useRoute();
 const { fetchData } = useApi();
 const generalStore = useGeneralStore();
 
 const pageInfo = [
-  {
-    key: "movie",
-    title: "Movies",
-  },
-  {
-    key: "tv",
-    title: "TV Shows",
-  },
+  { key: "movie", title: "Movies" },
+  { key: "tv", title: "TV Shows" },
 ] as { key: string; title: string }[];
 
 const pageTitle = computed(() => {
-  return pageInfo.find((x) => x.key === route.params.nav).title;
+  return pageInfo.find((x) => x.key === route.params.nav)?.title ?? "Unknown";
 });
 
-const totalPage = ref(1 as number);
-const page = ref(1 as number);
-const sortBy = "popularity" as string;
-const sortDesc = ref(true as boolean);
-const listMovies = ref([] as ModelMovie[]);
-const genreList = ref([] as ModelGenre);
-
-function refactorWithGenres(list: ModelMovie[]) {
-  if (list.length && generalStore.getMovieGenres.length) {
-    return list.map((x) => ({
-      ...x,
-      genres: filterListByIds(x.genre_ids, generalStore.getMovieGenres),
-    }));
-  }
-  return list;
-}
+const totalPage = ref(1);
+const page = ref(1);
+const sortBy = "popularity";
+const sortDesc = ref(true);
+const listMovies = ref<ModelMovie[]>([]);
+const genreList = ref<ModelGenre[]>([]);
 
 async function getListMovie() {
   const data = await fetchData(API_DISCOVER.movie, {
@@ -56,13 +46,21 @@ async function getListMovie() {
     page: page.value,
     sort_by: sortDesc.value ? `${sortBy}.desc` : `${sortBy}.asc`,
   });
+
   totalPage.value = data.total_pages;
-  const newList = refactorWithGenres(data.results);
-  if (page.value === 1) listMovies.value = [...newList];
-  else listMovies.value = [...listMovies.value, ...newList];
+  const newList = refactorListMovieWithGenre(
+    data.results,
+    generalStore.getMovieGenres
+  );
+
+  if (page.value === 1) {
+    listMovies.value = [...newList];
+  } else {
+    listMovies.value = [...listMovies.value, ...newList];
+  }
 }
 
-const title = onMounted(() => {
+onMounted(() => {
   getListMovie();
   if (route.params.nav === "movie") {
     genreList.value = generalStore.getMovieGenres.map((x) => ({
@@ -76,16 +74,19 @@ watch(sortDesc, () => {
   getListMovie();
 });
 
-watch(generalStore.getMovieGenres, () => {
-  if (page > 1) return false;
-  const newListDiscover = refactorMovieList(listMovies.value);
-  listMovies.value = [...newListDiscover];
-});
+watch(
+  () => generalStore.getMovieGenres,
+  (val) => {
+    if (page.value > 1) return;
+    const newListDiscover = refactorListMovieWithGenre(listMovies.value, val);
+    listMovies.value = [...newListDiscover];
+  }
+);
 
 async function loadMoreHandle() {
-  if (page.value + 1 >= totalPage.value) return false;
-  await page.value++;
-  getListMovie();
+  if (page.value + 1 >= totalPage.value) return;
+  page.value++;
+  await getListMovie();
 }
 </script>
 <template>
@@ -110,7 +111,7 @@ async function loadMoreHandle() {
           </div>
           <div :class="classes.movieWrap" class="w-full">
             <div
-              class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-5 gap-y-6"
+              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-6"
             >
               <MCardMovie
                 v-for="item in listMovies"

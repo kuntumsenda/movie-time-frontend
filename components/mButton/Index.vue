@@ -6,6 +6,7 @@ const props = defineProps({
   outlined: { type: Boolean, default: false },
   variant: { type: String, default: "primary" },
   rounded: { type: Boolean, default: true },
+  text: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["click"]);
@@ -17,8 +18,13 @@ const emit = defineEmits(["click"]);
       classes.mButton,
       variant === 'primary'
         ? 'bg-red'
-        : (variant = 'secondary' ? 'bg-black-600' : 'bg-primary'),
+        : variant === 'secondary'
+        ? 'bg-black-600'
+        : 'bg-primary',
       rounded && 'rounded-full',
+      text && `text`,
+      outlined && 'outline',
+      variant,
     ]"
     @click="$emit('click')"
   >
@@ -34,5 +40,14 @@ const emit = defineEmits(["click"]);
 }
 .mButton:hover {
   box-shadow: rgba(244, 226, 222, 0.183) 0 3px 8px;
+}
+</style>
+
+<style lang="css" scoped>
+.text {
+  background: transparent;
+}
+.text.primary {
+  @apply text-red;
 }
 </style>

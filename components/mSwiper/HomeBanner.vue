@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/vue";
 import "swiper/css";
 import "swiper/css/pagination";
 import { Pagination } from "swiper/modules";
-import type { ModelMovie } from "@/models/movie";
+import type { ModelMovie } from "~/models/movies";
 import { number1Comma, onlyYear, genreDisplay } from "@/composables/format";
 
 const props = defineProps<{
@@ -13,12 +13,19 @@ const props = defineProps<{
 <template>
   <swiper
     ref="{swiperRef}"
-    :slidesPerView="3"
     :centeredSlides="true"
-    :spaceBetween="30"
     pagination
     :modules="[Pagination]"
-    class="mySwiper"
+    :breakpoints="{
+      320: {
+        slidesPerView: 1,
+        spaceBetween: 20,
+      },
+      640: {
+        slidesPerView: 3,
+        spaceBetween: 30,
+      },
+    }"
   >
     <swiper-slide v-for="item in items" :key="item.id">
       <div class="flex items-center">

@@ -1,6 +1,9 @@
 import type { ModelGenre } from "~/models/general";
 
-export function number1Comma(val: number) {
+export function number1Comma(val: number = 0): string {
+  if (typeof val !== "number" || isNaN(val)) {
+    return "0.0"; // Default output for invalid values
+  }
   return val.toFixed(1);
 }
 
@@ -19,3 +22,8 @@ export function genreDisplay(genres: ModelGenre[], isOne: boolean) {
   }
   return "";
 }
+
+export const USDollar = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+});
