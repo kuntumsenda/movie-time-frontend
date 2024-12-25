@@ -10,7 +10,10 @@ async function getMovieGenres() {
   const data = await fetchData(API_GENRES.movie, {
     language: "en-US",
   });
-  generalStore.setMovieGenres(data.genres);
+  if (data) {
+    console.log(data, "data");
+    generalStore.setMovieGenres(data.genres);
+  }
 }
 function handleScroll(e?: any) {
   const header = document.querySelector("#header");

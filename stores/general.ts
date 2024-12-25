@@ -13,9 +13,10 @@ export const useGeneralStore = defineStore("generalStore", {
   },
   actions: {
     setMovieGenres(payload: ModelGenre[]) {
-      console.log(payload, "payload");
-      sessionStorage.setItem("movieGenres", JSON.stringify(payload));
-      this.movieGenres = payload;
+      if (payload?.length) {
+        sessionStorage.setItem("movieGenres", JSON.stringify(payload));
+        this.movieGenres = payload;
+      }
     },
   },
 });
