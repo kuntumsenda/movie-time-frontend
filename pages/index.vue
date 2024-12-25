@@ -35,7 +35,7 @@ async function getListBanner() {
     language: "en-US",
   });
   const newList = refactorListMovieWithGenre({
-    listMovie: data.results.slice(0, 5),
+    listMovie: data.results?.slice(0, 5),
     genres: generalStore.getMovieGenres,
   });
   listBanner.value = [...newList];

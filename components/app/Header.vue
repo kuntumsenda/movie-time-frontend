@@ -68,7 +68,7 @@ function onSubmitSearch(e: number) {
 }
 
 function setCategoryItems(list: ModelGenre[]) {
-  if (list.length) {
+  if (list?.length) {
     navHeader.value[0].items = list.map((x) => ({
       label: x.name,
       value: x.id,
