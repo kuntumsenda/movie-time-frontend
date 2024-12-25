@@ -40,10 +40,10 @@ async function getListRecommend() {
     language: "en-US",
     page: 1,
   });
-  const newList = refactorListMovieWithGenre(
-    data.results.slice(0, 5),
-    generalStore.getMovieGenres
-  );
+  const newList = refactorListMovieWithGenre({
+    listMovie: data.results.slice(0, 5),
+    genres: generalStore.getMovieGenres,
+  });
   listRecommendation.value = [...newList];
 }
 
@@ -54,7 +54,10 @@ const title = onMounted(() => {
 });
 
 watch(generalStore.getMovieGenres, (val) => {
-  const newList = refactorListMovieWithGenre(listRecommendation.value, val);
+  const newList = refactorListMovieWithGenre({
+    listMovie: listRecommendation.value,
+    genres: val,
+  });
   listRecommendation.value = [...newList];
 });
 </script>
@@ -88,7 +91,7 @@ watch(generalStore.getMovieGenres, (val) => {
             </p>
             <h2 class="text-3xl font-semibold">{{ detail.title }}</h2>
             <p class="text-md">
-              {{ genreDisplay(detail.genres ?? [], false) }}
+              {{ genreDisplay(detail.genres ?? []) }}
             </p>
           </div>
         </div>

@@ -15,7 +15,7 @@ export function onlyYear(val: string) {
   return "";
 }
 
-export function genreDisplay(genres: ModelGenre[], isOne: boolean) {
+export function genreDisplay(genres: ModelGenre[] = [], isOne: boolean) {
   if (genres.length) {
     const list = isOne ? genres.slice(0, 1) : genres;
     return list.map((x) => x.name).join(", ");

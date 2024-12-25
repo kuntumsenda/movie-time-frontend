@@ -10,11 +10,14 @@ export function filterListByIds(ids: number[], genres: ModelGenre[]) {
   return [];
 }
 
-export function refactorListMovieWithGenre(
-  listMovie: ModelMovie[],
-  genres: ModelGenre[]
-) {
-  if (listMovie.length && genres.length) {
+export function refactorListMovieWithGenre({
+  listMovie = [],
+  genres = [],
+}: {
+  listMovie: ModelMovie[];
+  genres: ModelGenre[];
+}) {
+  if (listMovie?.length && genres?.length) {
     return listMovie.map((x) => ({
       ...x,
       genres: filterListByIds(x.genre_ids, genres),

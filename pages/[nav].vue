@@ -40,7 +40,7 @@ const genreList = ref<ModelGenre[]>([]);
 const loading = ref(false as boolean);
 
 function setListDiscover(list: ModelMovie[], genres: ModelGenre[]) {
-  const newList = refactorListMovieWithGenre(list, genres);
+  const newList = refactorListMovieWithGenre({ listMovie: list, genres });
 
   if (page.value === 1) {
     listMovies.value = [...newList];
@@ -72,31 +72,27 @@ async function getListMovie() {
   loading.value = false;
 }
 
-onMounted(() => {
-  getListMovie();
-  // const genreSelected = route.query.genre
-  //   ? JSON.parse(route.query.genre as string)
-  //   : [];
-  setSelectedGenres();
-  // if (route.params.nav === "movie") {
-  //   genreList.value = generalStore.getMovieGenres.map((x) => ({
-  //     ...x,
-  //     selected: genreSelected.length ? genreSelected.includes(x.id) : false,
-  //   }));
-  // }
-});
-
 function setSelectedGenres() {
   const genreSelected = route.query.genre
     ? JSON.parse(route.query.genre as string)
     : [];
   if (route.params.nav === "movie") {
-    genreList.value = generalStore.getMovieGenres.map((x) => ({
+    console.log("list");
+    console.log(generalStore.getMovieGenres);
+    const newList = generalStore.getMovieGenres.map((x) => ({
       ...x,
       selected: genreSelected.length ? genreSelected.includes(x.id) : false,
     }));
+    console.log(newList);
+    genreList.value = [...newList];
+    console.log(genreList.value);
   }
 }
+
+onMounted(() => {
+  getListMovie();
+  setSelectedGenres();
+});
 
 watch(sortDesc, () => {
   getListMovie();

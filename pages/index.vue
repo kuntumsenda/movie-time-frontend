@@ -22,10 +22,10 @@ async function getListMovie() {
     page: page.value,
     sort_by: sortDesc.value ? `${sortBy}.desc` : `${sortBy}.asc`,
   });
-  const newList = refactorListMovieWithGenre(
-    data.results,
-    generalStore.getMovieGenres
-  );
+  const newList = refactorListMovieWithGenre({
+    listMovie: data.results,
+    genres: generalStore.getMovieGenres,
+  });
   listDiscvoverMovie.value = [...newList];
   getListBanner();
 }
@@ -34,10 +34,10 @@ async function getListBanner() {
   const data = await fetchData(API_TRENDING.all, {
     language: "en-US",
   });
-  const newList = refactorListMovieWithGenre(
-    data.results.slice(0, 5),
-    generalStore.getMovieGenres
-  );
+  const newList = refactorListMovieWithGenre({
+    listMovie: data.results.slice(0, 5),
+    genres: generalStore.getMovieGenres,
+  });
   listBanner.value = [...newList];
 }
 
@@ -50,12 +50,15 @@ watch(sortDesc, () => {
 });
 
 watch(generalStore.getMovieGenres, (val) => {
-  const newListBanner = refactorListMovieWithGenre(listBanner.value, val);
+  const newListBanner = refactorListMovieWithGenre({
+    listMovie: listBanner.value,
+    genres: val,
+  });
   listBanner.value = [...newListBanner];
-  const newListDiscover = refactorListMovieWithGenre(
-    listDiscvoverMovie.value,
-    val
-  );
+  const newListDiscover = refactorListMovieWithGenre({
+    listMovie: listDiscvoverMovie.value,
+    genres: val,
+  });
   listDiscvoverMovie.value = [...newListDiscover];
 });
 </script>

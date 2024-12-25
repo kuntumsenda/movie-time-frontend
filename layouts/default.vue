@@ -18,7 +18,7 @@ function handleScroll(e?: any) {
   else header?.classList.remove("bg-darkBgPrimary");
 }
 onMounted(() => {
-  if (!generalStore.getMovieGenres.length) getMovieGenres();
+  if (!generalStore.getMovieGenres?.length) getMovieGenres();
   window.addEventListener("scroll", handleScroll);
 });
 onUnmounted(() => {
