@@ -4,8 +4,8 @@ import { API_DISCOVER } from "@/utils/api";
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useGeneralStore } from "@/stores/general";
-import type { ModelMovie } from "~/models/movies";
-import type { ModelGenre } from "@/models/general";
+import type { ModelMovie, ModelParamMovie } from "~/models/movies";
+import type { ModelGenre, ModelMenu } from "@/models/general";
 import { refactorListMovieWithGenre } from "#build/imports";
 
 definePageMeta({
@@ -19,6 +19,7 @@ definePageMeta({
 });
 
 const route = useRoute();
+const router = useRouter();
 const { fetchData } = useApi();
 const generalStore = useGeneralStore();
 
@@ -33,25 +34,13 @@ const pageTitle = computed(() => {
 
 const totalPage = ref(1);
 const page = ref(1);
-const sortBy = "popularity";
 const sortDesc = ref(true);
 const listMovies = ref<ModelMovie[]>([]);
 const genreList = ref<ModelGenre[]>([]);
+const loading = ref(false as boolean);
 
-async function getListMovie() {
-  const data = await fetchData(API_DISCOVER.movie, {
-    include_adult: false,
-    include_video: false,
-    language: "en-US",
-    page: page.value,
-    sort_by: sortDesc.value ? `${sortBy}.desc` : `${sortBy}.asc`,
-  });
-
-  totalPage.value = data.total_pages;
-  const newList = refactorListMovieWithGenre(
-    data.results,
-    generalStore.getMovieGenres
-  );
+function setListDiscover(list: ModelMovie[], genres: ModelGenre[]) {
+  const newList = refactorListMovieWithGenre(list, genres);
 
   if (page.value === 1) {
     listMovies.value = [...newList];
@@ -60,12 +49,38 @@ async function getListMovie() {
   }
 }
 
+async function getListMovie() {
+  if (loading.value) return false;
+  loading.value = true;
+  let params = {
+    include_adult: false,
+    include_video: false,
+    language: "en-US",
+    page: page.value,
+    sort_by: sortBy.value,
+  } as ModelParamMovie;
+  if (route.query.genre) {
+    const genres = JSON.parse(route.query.genre as string);
+    if (Array.isArray(genres)) {
+      params["with_genres"] = genres.join("|");
+    }
+  }
+  const data = await fetchData(API_DISCOVER.movie, params);
+
+  totalPage.value = data.total_pages;
+  setListDiscover(data.results, generalStore.getMovieGenres);
+  loading.value = false;
+}
+
 onMounted(() => {
   getListMovie();
+  const genreSelected = route.query.genre
+    ? JSON.parse(route.query.genre as string)
+    : [];
   if (route.params.nav === "movie") {
     genreList.value = generalStore.getMovieGenres.map((x) => ({
       ...x,
-      selected: false,
+      selected: genreSelected.length ? genreSelected.includes(x.id) : false,
     }));
   }
 });
@@ -78,16 +93,72 @@ watch(
   () => generalStore.getMovieGenres,
   (val) => {
     if (page.value > 1) return;
-    const newListDiscover = refactorListMovieWithGenre(listMovies.value, val);
-    listMovies.value = [...newListDiscover];
+    setListDiscover(listMovies.value, val);
   }
 );
 
 async function loadMoreHandle() {
+  console.log("kesiini");
   if (page.value + 1 >= totalPage.value) return;
   page.value++;
   await getListMovie();
 }
+
+function changeGenreHandle() {
+  const query = genreList.value.filter((x) => x.selected)?.map((y) => y.id);
+  router.push({ name: "nav", query: { genre: JSON.stringify(query) } });
+}
+
+watch(
+  () => route.query.genre,
+  () => {
+    page.value = 1;
+    setTimeout(() => {
+      getListMovie();
+    }, 300);
+  }
+);
+
+const sortOptions = [
+  {
+    label: "Popularity Ascending",
+    value: "popularity.asc",
+  },
+  {
+    label: "Popularity Descending",
+    value: "popularity.desc",
+  },
+  {
+    label: "Release Date Ascending",
+    value: "release_date.asc",
+  },
+  {
+    label: "Release Date Ascending",
+    value: "release_date.asc",
+  },
+  {
+    label: "Rating Ascending",
+    value: "rating.asc",
+  },
+  {
+    label: "Rating Ascending",
+    value: "rating.asc",
+  },
+] as ModelMenu[];
+
+const sortBy = computed({
+  get() {
+    return route.query.sortBy || "";
+  },
+  set(newVal) {
+    page.value = 1;
+    router.push({
+      name: "nav",
+      query: { ...route.query, sortBy: newVal },
+    });
+    getListMovie();
+  },
+});
 </script>
 <template>
   <div style="position: relative">
@@ -100,13 +171,24 @@ async function loadMoreHandle() {
           <div :class="classes.sortCard" class="h-fit">
             <div class="font-semibold px-4 py-5">Sort Result By</div>
             <div class="px-4 py-5">
-              <MInput placeholder="Popularity" />
+              <MSelect
+                v-model="sortBy"
+                placeholder="Popularity"
+                variant="dark"
+                :options="sortOptions"
+              />
             </div>
             <div class="font-semibold px-4 py-5">Genres</div>
-            <div class="px-4 py-5">
-              <span v-for="gen in genreList" :key="gen.id" class="block">{{
-                gen.name
-              }}</span>
+            <div class="px-4 py-5 flex flex-col gap-3">
+              <MCheckbox
+                v-for="(gen, index) in genreList"
+                v-model="gen.selected"
+                :key="gen.id"
+                :labelLeft="gen.name"
+                isLabelLeft
+                style="margin: -4px"
+                @change="changeGenreHandle"
+              />
             </div>
           </div>
           <div :class="classes.movieWrap" class="w-full">

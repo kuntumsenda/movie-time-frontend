@@ -1,5 +1,11 @@
 <script lang="ts" setup>
+import { useApi } from "@/composables/useApi";
+import { API_SEARCH } from "#build/imports";
+import type { ModelMovie } from "~/models/movies";
+
 const router = useRouter();
+const { fetchData } = useApi();
+
 const navHeader = [
   {
     label: "CATEGORIES",
@@ -25,7 +31,38 @@ const navHeader = [
   {
     label: "TV SHOWS",
   },
+  {
+    label: "LOGIN",
+  },
 ];
+
+const searchMovie = ref("" as string);
+const listSearchQuery = ref([] as any[]);
+const loading = ref(false as boolean);
+
+async function searchTrendMovieQuery(e: string) {
+  loading.value = true;
+  const res = await fetchData(API_SEARCH.movie, {
+    include_adult: false,
+    language: "en-US",
+    page: 1,
+    query: e,
+  });
+  if (res.results.length) {
+    listSearchQuery.value = res.results.map((x: ModelMovie) => ({
+      label: x.title,
+      value: x.id,
+    }));
+    loading.value = false;
+    return;
+  }
+  listSearchQuery.value = [];
+  loading.value = false;
+}
+
+function onSubmitSearch(e: number) {
+  router.push(`/detail/${e}`);
+}
 </script>
 <template>
   <header
@@ -40,7 +77,14 @@ const navHeader = [
           @click="router.push('/')"
         />
         <div :class="classes.searchInput" class="w-full">
-          <MAutoComplete block placeholder="Find Movie">
+          <MAutoComplete
+            v-model="searchMovie"
+            block
+            placeholder="Find Movie"
+            :items="listSearchQuery"
+            @search="searchTrendMovieQuery"
+            @submit="onSubmitSearch"
+          >
             <template #prepend>
               <MIcon name="mdi:movie" color="#494c51" />
             </template>
@@ -51,21 +95,34 @@ const navHeader = [
         </div>
       </div>
       <nav class="text-sm mt-5 md:mt-0">
-        <ul class="flex items-center gap-9">
+        <ul class="flex items-center gap-1">
           <div v-for="(nav, index) in navHeader" :key="index">
-            <li
-              v-if="nav.route"
-              class="flex items-center gap-3 cursor-pointer"
-              @click="router.push(nav.route)"
-            >
-              <span>{{ nav.label }}</span>
+            <li v-if="nav.route">
+              <MButton
+                text
+                variant="darkTextBody"
+                class="m-dropdown-button font-normal"
+                :label="nav.label"
+                @click="router.push(nav.route)"
+              />
             </li>
-            <li v-else class="flex items-center gap-3 cursor-pointer">
-              <MIcon v-if="nav.icon" :name="nav.icon" class="text-xl" />
-              <span class="whitespace-nowrap">{{ nav.label }}</span>
+            <li v-else-if="nav.items">
+              <MDropdown :items="nav.items" hideIconChevron>
+                <template #label>
+                  <MIcon v-if="nav.icon" :name="nav.icon" class="text-xl" />
+                  <span class="whitespace-nowrap">{{ nav.label }}</span>
+                </template>
+              </MDropdown>
+            </li>
+            <li v-else>
+              <MButton
+                text
+                variant="darkTextBody"
+                class="m-dropdown-button font-normal whitespace-nowrap"
+                :label="nav.label"
+              />
             </li>
           </div>
-          <li>LOGIN</li>
         </ul>
       </nav>
     </div>
@@ -74,6 +131,7 @@ const navHeader = [
 <style lang="css" module="classes">
 .mHeader {
   height: 108px;
+  z-index: 100;
 }
 @media screen and (min-width: 768px) {
   .mHeader {

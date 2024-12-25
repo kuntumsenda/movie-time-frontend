@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { defineProps, defineEmits } from "vue";
-
 const props = defineProps({
   label: String,
   outlined: { type: Boolean, default: false },
@@ -10,6 +8,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["click"]);
+function onClick(e: Event) {
+  e.preventDefault();
+  emit("click", e);
+}
 </script>
 <template>
   <button
@@ -26,7 +28,7 @@ const emit = defineEmits(["click"]);
       outlined && 'outline',
       variant,
     ]"
-    @click="$emit('click')"
+    @click="onClick"
   >
     {{ label }}
     <slot />

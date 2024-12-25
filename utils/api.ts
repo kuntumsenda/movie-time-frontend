@@ -19,3 +19,7 @@ export const API_TRENDING = {
 export const API_MOVIES = {
   detail: "movie/" as string,
 };
+
+export const API_SEARCH = {
+  movie: "search/movie" as string,
+};

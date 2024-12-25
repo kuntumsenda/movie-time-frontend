@@ -36,3 +36,12 @@ export type ModelProductionCompany = {
   name: string;
   origin_country: string;
 };
+
+export type ModelParamMovie = {
+  include_adult: boolean;
+  include_video: boolean;
+  language: string;
+  page: number;
+  sort_by: string;
+  [key: string]: any; // Allow additional properties
+};
