@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   pinia: {
     storesDirs: ["./stores/**", "./custom-folder/stores/**"],
   },
-  plugins: ["~/plugins/axios"],
+  plugins: ["~/plugins/axios", "~/plugins/datefns"],
   runtimeConfig: {
     public: {
       API_BASE_URL: process.env.BASE_URL,

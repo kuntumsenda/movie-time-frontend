@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ModelReview } from "~/models/review";
+const { $dateFns } = useNuxtApp();
 
 const props = defineProps<{
   item: ModelReview;
@@ -13,7 +14,9 @@ const props = defineProps<{
         <MAvatar size="48px" :path="item.author_details.avatar_path" />
         <div>
           <span class="block text-sm font-bold">{{ item.author }}</span>
-          <span class="block text-xs text-gray-500">December 18, 2020</span>
+          <span class="block text-xs text-gray-500">{{
+            $dateFns.format(new Date(item.updated_at), "MMMM dd, yyy")
+          }}</span>
         </div>
       </div>
       <MRating

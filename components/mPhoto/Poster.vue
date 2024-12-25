@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 const props = defineProps({
-  path: { type: String, default: "2cxhvwyEwRlysAmRH4iodkvo0z5.jpg" },
+  path: { type: String, default: "" },
   elevation: { type: Boolean, default: false },
 });
 </script>
 <template>
   <div
-    :class="classes.photoWrap"
+    :class="[classes.photoWrap, !path && 'bg-gray-300']"
     :style="
       elevation && 'filter: drop-shadow(0px 5px 10px rgba(0, 0, 0, 0.25));'
     "
