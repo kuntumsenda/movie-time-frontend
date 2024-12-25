@@ -14,6 +14,8 @@ const props = withDefaults(
     hideIconChevron: false,
   }
 );
+
+const emit = defineEmits(["selected"]);
 const isOpen = ref(false as boolean);
 const mDropdown = ref<HTMLElement | null>(null);
 
@@ -30,6 +32,11 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
 });
+
+function onSelected(e: ModelMenu) {
+  isOpen.value = false;
+  emit("selected", e);
+}
 </script>
 <template>
   <div ref="mDropdown" class="relative inline-block text-left m-dropdown">
@@ -58,6 +65,7 @@ onUnmounted(() => {
       :width="widthMenu"
       class="m-dropdown-items"
       :class="isOpen && 'open z-20'"
+      @selected="onSelected"
     />
   </div>
 </template>

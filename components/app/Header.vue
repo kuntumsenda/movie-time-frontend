@@ -2,14 +2,17 @@
 import { useApi } from "@/composables/useApi";
 import { API_SEARCH } from "#build/imports";
 import type { ModelMovie } from "~/models/movies";
+import type { ModelGenre, ModelMenu } from "~/models/general";
 
 const router = useRouter();
 const { fetchData } = useApi();
+const generalStore = useGeneralStore();
 
-const navHeader = [
+const navHeader = ref([
   {
     label: "CATEGORIES",
     icon: "mdi:view-grid",
+    path: "/movie",
     items: [
       { label: "ACTION" },
       { label: "ADVENTURE" },
@@ -22,7 +25,7 @@ const navHeader = [
       { label: "FANTASY" },
       { label: "HISTORY" },
       { label: "HOROR" },
-    ],
+    ] as ModelMenu[],
   },
   {
     label: "MOVIES",
@@ -34,7 +37,7 @@ const navHeader = [
   {
     label: "LOGIN",
   },
-];
+] as ModelMenu[]);
 
 const searchMovie = ref("" as string);
 const listSearchQuery = ref([] as any[]);
@@ -62,6 +65,30 @@ async function searchTrendMovieQuery(e: string) {
 
 function onSubmitSearch(e: number) {
   router.push(`/detail/${e}`);
+}
+
+function setCategoryItems(list: ModelGenre[]) {
+  if (list.length) {
+    navHeader.value[0].items = list.map((x) => ({
+      label: x.name,
+      value: x.id,
+      route: `${navHeader.value[0].path}?genre=[${x.id}]`,
+    }));
+  }
+}
+
+onMounted(() => {
+  setCategoryItems(generalStore.getMovieGenres);
+});
+
+watch(
+  () => generalStore.getMovieGenres,
+  (val) => {
+    setCategoryItems(val);
+  }
+);
+function onSelectedMenu(val: ModelMenu) {
+  if (val.route) router.push(val.route);
 }
 </script>
 <template>
@@ -94,7 +121,7 @@ function onSubmitSearch(e: number) {
           </MAutoComplete>
         </div>
       </div>
-      <nav class="text-sm mt-5 md:mt-0">
+      <nav class="text-sm mt-5 md:mt-0" :class="classes.navWrapper">
         <ul class="flex items-center gap-1">
           <div v-for="(nav, index) in navHeader" :key="index">
             <li v-if="nav.route">
@@ -107,7 +134,11 @@ function onSubmitSearch(e: number) {
               />
             </li>
             <li v-else-if="nav.items">
-              <MDropdown :items="nav.items" hideIconChevron>
+              <MDropdown
+                :items="nav.items"
+                hideIconChevron
+                @selected="onSelectedMenu"
+              >
                 <template #label>
                   <MIcon v-if="nav.icon" :name="nav.icon" class="text-xl" />
                   <span class="whitespace-nowrap">{{ nav.label }}</span>
@@ -141,5 +172,10 @@ function onSubmitSearch(e: number) {
 
 .searchInput {
   max-width: 571px;
+}
+@media screen and (max-width: 428px) {
+  .navWrapper {
+    overflow-x: auto;
+  }
 }
 </style>

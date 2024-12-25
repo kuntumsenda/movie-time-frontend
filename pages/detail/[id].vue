@@ -67,14 +67,21 @@ watch(generalStore.getMovieGenres, (val) => {
         class="w-full h-full absolute object-cover"
         style="z-index: -1"
       />
-      <section :class="classes.sectionOverview" class="relative">
+      <section :class="[classes.sectionOverview]" class="relative">
         <div class="container absolute" :class="classes.containerPoster">
-          <MPhotoPoster elevation :path="detail.poster_path" />
+          <MPhotoPoster
+            elevation
+            :path="detail.poster_path"
+            :class="classes.poster"
+          />
         </div>
         <div class="container">
           <div
-            class="font-medium px-8 pb-8 pt-4 text-white"
-            :class="classes.containerOverviewSpace"
+            class="font-medium px-3 sm:px-6 md:px-8 pb-8 pt-4 text-white"
+            :class="[
+              classes.containerOverviewSpace,
+              classes.containerOverviewSpaceFirst,
+            ]"
           >
             <p style="font-size: 18px">
               {{ onlyYear(detail.release_date ?? "") }}
@@ -91,7 +98,7 @@ watch(generalStore.getMovieGenres, (val) => {
               class="container grid grid-cols-6 sm:grid-cols-12 lg:flex items-center py-5 gap-y-5"
             >
               <div
-                class="flex items-center gap-3 px-8 sm:col-span-12 col-span-6"
+                class="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 md:px-8 sm:col-span-12 col-span-6"
               >
                 <div class="text-sm font-medium">
                   <span class="text-white-500 block">USER SCORE</span>
@@ -103,21 +110,21 @@ watch(generalStore.getMovieGenres, (val) => {
                   class="font-semibold"
                 />
               </div>
-              <div class="text-sm font-medium px-8 col-span-6">
+              <div class="text-sm font-medium px-3 sm:px-6 md:px-8 col-span-6">
                 <span class="text-white-500 block">STATUS</span>
                 <div>{{ detail.status }}</div>
               </div>
-              <div class="text-sm font-medium px-8 col-span-6">
+              <div class="text-sm font-medium px-3 sm:px-6 md:px-8 col-span-6">
                 <span class="text-white-500 block">LANGUAGE</span>
                 <div>{{ detail.spoken_languages?.[0].english_name }}</div>
               </div>
-              <div class="text-sm font-medium px-8 col-span-6">
+              <div class="text-sm font-medium px-3 sm:px-6 md:px-8 col-span-6">
                 <span class="text-white-500 block">BUDGET</span>
                 <div>
                   {{ USDollar.format(detail.budget ?? 0) }}
                 </div>
               </div>
-              <div class="text-sm font-medium px-8 col-span-6">
+              <div class="text-sm font-medium px-3 sm:px-6 md:px-8 col-span-6">
                 <span class="text-white-500 block">PRODUCTION</span>
                 <div>{{ detail.production_companies?.[0].name }}</div>
               </div>
@@ -126,7 +133,13 @@ watch(generalStore.getMovieGenres, (val) => {
         </div>
         <div class="bg-white">
           <div class="container">
-            <div class="px-8" :class="classes.containerOverviewSpace">
+            <div
+              class="md:px-8"
+              :class="[
+                classes.containerOverviewSpace,
+                classes.containerOverviewSpaceLast,
+              ]"
+            >
               <div class="pb-11 pt-6 text-sm" style="max-width: 526px">
                 <h3 class="font-semibold mb-2 text-red">OVERVIEW</h3>
                 <p class="text-blackNormal leading-loose">
@@ -153,7 +166,9 @@ watch(generalStore.getMovieGenres, (val) => {
     <section class="py-12">
       <div class="container">
         <h3 class="font-semibold text-sm mb-9">RECOMMENDATION MOVIES</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5">
+        <div
+          class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-x-3 gap-y-5"
+        >
           <MCardMovie
             v-for="item in listRecommendation"
             :key="item.id"
@@ -170,7 +185,12 @@ watch(generalStore.getMovieGenres, (val) => {
 </template>
 <style lang="css" module="classes">
 .pageDetail {
-  margin-top: -66px;
+  margin-top: -108px;
+}
+@media screen and (min-width: 768px) {
+  .pageDetail {
+    margin-top: -66px;
+  }
 }
 .sectionMovieList {
   position: relative;
@@ -213,5 +233,29 @@ watch(generalStore.getMovieGenres, (val) => {
 }
 .containerOverviewSpace {
   margin-left: 220px;
+}
+
+@media screen and (max-width: 479px) {
+  .sectionOverview {
+    padding-top: 150px;
+  }
+  .containerPoster {
+    top: 334px;
+  }
+  .containerOverviewSpace {
+    margin-left: 170px;
+  }
+  .containerOverviewSpaceFirst {
+    margin-left: 0;
+  }
+  .poster {
+    width: 170px;
+    height: 250px;
+  }
+}
+@media screen and (max-width: 768px) {
+  .containerOverviewSpaceLast {
+    margin-left: 0;
+  }
 }
 </style>

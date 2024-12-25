@@ -9,4 +9,6 @@ export type ModelMenu = {
   icon?: string;
   items?: ModelMenu[];
   value?: any;
+  route?: any;
+  path?: string;
 };

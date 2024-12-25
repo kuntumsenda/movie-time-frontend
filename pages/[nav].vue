@@ -74,6 +74,19 @@ async function getListMovie() {
 
 onMounted(() => {
   getListMovie();
+  // const genreSelected = route.query.genre
+  //   ? JSON.parse(route.query.genre as string)
+  //   : [];
+  setSelectedGenres();
+  // if (route.params.nav === "movie") {
+  //   genreList.value = generalStore.getMovieGenres.map((x) => ({
+  //     ...x,
+  //     selected: genreSelected.length ? genreSelected.includes(x.id) : false,
+  //   }));
+  // }
+});
+
+function setSelectedGenres() {
   const genreSelected = route.query.genre
     ? JSON.parse(route.query.genre as string)
     : [];
@@ -83,7 +96,7 @@ onMounted(() => {
       selected: genreSelected.length ? genreSelected.includes(x.id) : false,
     }));
   }
-});
+}
 
 watch(sortDesc, () => {
   getListMovie();
@@ -98,7 +111,6 @@ watch(
 );
 
 async function loadMoreHandle() {
-  console.log("kesiini");
   if (page.value + 1 >= totalPage.value) return;
   page.value++;
   await getListMovie();
@@ -115,6 +127,7 @@ watch(
     page.value = 1;
     setTimeout(() => {
       getListMovie();
+      setSelectedGenres();
     }, 300);
   }
 );
