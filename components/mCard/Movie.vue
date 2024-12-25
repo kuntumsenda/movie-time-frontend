@@ -27,6 +27,7 @@ const rateDisplay = computed(() => {
       <div
         :class="classes.infoHover"
         class="w-full h-full absolute top-0 left-0 p-3 flex items-center justify-center text-center info-hover"
+        @click="router.push(`/detail/${id}`)"
       >
         <div>
           <MRating :rate="rate ?? 0" class="justify-center" />

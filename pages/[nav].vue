@@ -211,6 +211,7 @@ const sortBy = computed({
               <MCardMovie
                 v-for="item in listMovies"
                 :key="item.id"
+                :id="item.id"
                 :posterPath="item.poster_path"
                 :releaseDate="item.release_date"
                 :rate="item.vote_average"

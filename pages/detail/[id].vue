@@ -93,9 +93,10 @@ watch(generalStore.getMovieGenres, (val) => {
           </div>
         </div>
         <div style="background: #00000080">
-          <div :class="classes.containerOverviewSpace">
+          <div class="container">
             <div
-              class="container grid grid-cols-6 sm:grid-cols-12 lg:flex items-center py-5 gap-y-5"
+              :class="classes.containerOverviewSpace"
+              class="grid grid-cols-6 sm:grid-cols-12 lg:flex items-center py-5 gap-y-5"
             >
               <div
                 class="flex items-center gap-1 sm:gap-3 px-3 sm:px-6 md:px-8 sm:col-span-12 col-span-6"
